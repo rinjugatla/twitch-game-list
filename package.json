@@ -1,0 +1,19 @@
+{
+  "name": "twitch-game-list",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "npx tsc",
+    "build:watch": "npx tsc --watch",
+    "dev": "nodemon -r dotenv/config ./app/index.js ",
+    "start": "node -r dotenv/config ./app/index.js "
+  },
+  "keywords": [],
+  "devDependencies": {
+    "@types/node": "^20.12.12",
+    "dotenv": "^16.4.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
+  }
+}
