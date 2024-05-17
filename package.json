@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "build": "npx tsc",
-    "build:watch": "npx tsc --watch"
+    "build:watch": "npx tsc --watch",
+    "ts-add-js-ext": "ts-add-js-extension --dir=build"
   },
   "keywords": [],
   "devDependencies": {
@@ -14,5 +15,8 @@
     "dotenv": "^16.4.5",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.5"
+  },
+  "dependencies": {
+    "ts-add-js-extension": "^1.6.4"
   }
 }
