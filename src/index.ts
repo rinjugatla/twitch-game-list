@@ -38,10 +38,11 @@ const sleep = (milliSec: number) => new Promise(resolve => setTimeout(resolve, m
  * @param prevGames 前回の取得結果
  */
 const fetchGames = async (api: TwitchApi, prevGames: TwtichGames) => {
-    const prevLastGameId = prevGames.length === 0 ? 0 : Number(prevGames[prevGames.length - 1].id);
+    const prevLastIgdbId = prevGames.length === 0 ? 0 : Number(prevGames[prevGames.length - 1].igdb_id);
     let fetchedGames: TwtichGames = [];
-    let offset = prevLastGameId;
-    for (let startId = prevLastGameId ; startId < 50000 ; startId += api.getGameCount()) {
+    let offset = prevLastIgdbId;
+    // データベースに登録されているゲームをすべて取得するため終了条件は未指定とする
+    for (let startId = prevLastIgdbId ; true ; startId += api.getGameCount()) {
         try {
             printLog(`start fetch games(id: ${startId}...${startId + api.getGameCount()})`);
             const games = await api.getGames(startId, offset);
@@ -64,9 +65,12 @@ const fetchGames = async (api: TwitchApi, prevGames: TwtichGames) => {
  * @returns 
  */
 const load = () => {
+    const existsPrevData = fs.existsSync(filepath);
+    if (!existsPrevData){ return []; }
+        
     const prevData = fs.readFileSync(filepath);
     const prevGames: TwtichGames = JSON.parse(prevData.toString());
-    printLog(`loaded prev games(count: ${prevGames.length}, lastId: ${prevGames[prevGames.length - 1].id})`);
+    printLog(`loaded prev games(count: ${prevGames.length}, lastIgdbId: ${prevGames[prevGames.length - 1].igdb_id})`);
     return prevGames;
 }
 
@@ -78,12 +82,19 @@ const load = () => {
 const save = (prevGames: TwtichGames, currentGames: TwtichGames) => {
     const marged = [...prevGames, ...currentGames];
     const uniqued = [...new Set(marged)];
-    const sorted = uniqued.sort((a, b) => Number(a.id) - Number(b.id));
+    const sorted = uniqued.sort((a, b) => Number(a.igdb_id) - Number(b.igdb_id));
     fs.writeFileSync(filepath, JSON.stringify(sorted, null, "    "));
-    printLog(`saved games(count: ${sorted.length}, lastId: ${sorted[sorted.length - 1].id})`);
+    printLog(`saved games(count: ${sorted.length}, lastId: ${sorted[sorted.length - 1].igdb_id})`);
 }
 
-const api = await initTwitchApi();
-const prevGames = load();
-const currentGames = await fetchGames(api, prevGames);
-save(prevGames, currentGames);
+/**
+ * ゲーム情報を更新
+ */
+const updateGames = async () => {
+    const api = await initTwitchApi();
+    const prevGames = load();
+    const currentGames = await fetchGames(api, prevGames);
+    save(prevGames, currentGames);
+}
+
+await updateGames();

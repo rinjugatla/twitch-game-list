@@ -104,7 +104,7 @@ export class TwitchApi {
 
         const baseUrl = "https://api.twitch.tv/helix/games";
         const idRange = this.range(offset + startId, offset + startId + this.getGameCount(), 1);
-        const params = this.createParams("id", idRange.map(id => id.toString()));
+        const params = this.createParams("igdb_id", idRange.map(id => id.toString()));
         const url = `${baseUrl}?${params}`;
 
         const response = await fetch(url, {
