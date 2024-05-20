@@ -123,10 +123,9 @@ export class TwitchApi {
     /**
      * Game情報を取得
      * @param startId 
-     * @param offset 
      * @returns 
      */
-    async getGames(startId: number, offset: number): Promise<TwtichGames> {
+    async getGames(startId: number): Promise<TwtichGames> {
         await this.refreshToken();
 
         const baseUrl = "https://api.twitch.tv/helix/games";
