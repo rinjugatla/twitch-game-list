@@ -28,7 +28,7 @@ const initTwitchApi = async () => {
 const sleep = (milliSec: number) => new Promise(resolve => setTimeout(resolve, milliSec))
 
 /**
- * 
+ * IGDBからゲームIDを取得
  * @param api Twitch API
  * @param prevIgdbLastId 前回のIGDB ID
  */
@@ -55,11 +55,11 @@ const fetchIgdbLastId = async (api: TwitchApi, prevIgdbLastId: number) => {
 }
 
 /**
- * ゲーム情報を取得
+ * Twitchからゲーム情報を取得
  * @param api Twitch API
  * @param prevGames 前回の取得結果
  */
-const fetchGames = async (api: TwitchApi, prevLastId: number, igdbLastId: number) => {
+const fetchTwitchGames = async (api: TwitchApi, prevLastId: number, igdbLastId: number) => {
     let fetchedGames: TwtichGames = [];
     let offset = prevLastId;
     for (let startId = prevLastId ; startId < igdbLastId; startId += api.getGameCount()) {
@@ -86,7 +86,7 @@ const updateGames = async () => {
     if(prevData == null){ return; }
 
     const igdbLastId = await fetchIgdbLastId(api, prevData.igdb_latest_id)
-    const currentGames = await fetchGames(api, prevData.igdb_latest_id, igdbLastId);
+    const currentGames = await fetchTwitchGames(api, prevData.igdb_latest_id, igdbLastId);
     save(prevData.twitch_game_list, currentGames, igdbLastId);
 }
 
