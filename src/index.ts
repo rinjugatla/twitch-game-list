@@ -3,6 +3,7 @@ import { TwitchApi, TwitchApiSetting } from './twitch';
 import { TwtichGames } from './types/Twtich';
 import { printLog } from './common';
 import { load, save } from './gameInfo';
+import { GameInfo } from './types/GameInfo';
 dotenv.config();
 
 const fetchIntervalMilliSec = 2000;
@@ -30,12 +31,12 @@ const sleep = (milliSec: number) => new Promise(resolve => setTimeout(resolve, m
 /**
  * IGDBからゲームIDを取得
  * @param api Twitch API
- * @param prevIgdbLastId 前回のIGDB ID
+ * @param prevData 前回取得したゲーム情報
  */
-const fetchIgdbLastId = async (api: TwitchApi, prevIgdbLastId: number) => {
+const fetchIgdbLastId = async (api: TwitchApi, prevData: GameInfo | null) => {
     const fetchGameLimit = 500;
-    let lastId = prevIgdbLastId;
-    for (let id = prevIgdbLastId; true; id+=fetchGameLimit) {
+    let lastId = prevData === null ? 1 : prevData.igdb_latest_id;
+    for (let id = lastId; true; id+=fetchGameLimit) {
         try {
             printLog(`start fetch igdb games(id: ${id}...${id + fetchGameLimit})`);
             const query = `fields id; sort id; limit ${fetchGameLimit}; offset: ${id};`
@@ -59,13 +60,13 @@ const fetchIgdbLastId = async (api: TwitchApi, prevIgdbLastId: number) => {
  * @param api Twitch API
  * @param prevGames 前回の取得結果
  */
-const fetchTwitchGames = async (api: TwitchApi, prevLastId: number, igdbLastId: number) => {
+const fetchTwitchGames = async (api: TwitchApi, prevData: GameInfo | null, igdbLastId: number) => {
     let fetchedGames: TwtichGames = [];
-    let offset = prevLastId;
+    const prevLastId = prevData === null ? 1 : prevData.igdb_latest_id;
     for (let startId = prevLastId ; startId < igdbLastId; startId += api.getGameCount()) {
         try {
             printLog(`start fetch games(id: ${startId}...${startId + api.getGameCount()})`);
-            const games = await api.getGames(startId, offset);
+            const games = await api.getGames(startId);
 
             fetchedGames = [...fetchedGames, ...games];
             await sleep(fetchIntervalMilliSec);
@@ -83,11 +84,9 @@ const fetchTwitchGames = async (api: TwitchApi, prevLastId: number, igdbLastId: 
 const updateGames = async () => {
     const api = await initTwitchApi();
     const prevData = load();
-    if(prevData == null){ return; }
-
-    const igdbLastId = await fetchIgdbLastId(api, prevData.igdb_latest_id)
-    const currentGames = await fetchTwitchGames(api, prevData.igdb_latest_id, igdbLastId);
-    save(prevData.twitch_game_list, currentGames, igdbLastId);
+    const igdbLastId = await fetchIgdbLastId(api, prevData)
+    const currentGames = await fetchTwitchGames(api, prevData, igdbLastId);
+    save(prevData, currentGames, igdbLastId);
 }
 
 await updateGames();

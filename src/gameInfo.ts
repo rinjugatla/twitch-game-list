@@ -24,8 +24,9 @@ export const load = () => {
  * @param prevGames 前回のゲーム情報
  * @param currentGames 今回取得したゲーム情報
  */
-export const save = (prevGames: TwtichGames, currentGames: TwtichGames, igdbLastId: number) => {
-    const marged = [...prevGames, ...currentGames];
+export const save = (prevGames: GameInfo | null, currentGames: TwtichGames, igdbLastId: number) => {
+    const prev = prevGames === null ? [] : prevGames.twitch_game_list;
+    const marged = [...prev, ...currentGames];
     const uniqued = [...new Set(marged)];
     const sorted = uniqued.sort((a, b) => Number(a.igdb_id) - Number(b.igdb_id));
     const date = {
