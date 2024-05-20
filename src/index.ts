@@ -1,11 +1,11 @@
 import * as dotenv from 'dotenv';
-import * as fs from 'fs';
 import { TwitchApi, TwitchApiSetting } from './twitch';
 import { TwtichGames } from './types/Twtich';
+import { printLog } from './common';
+import { load, save } from './gameInfo';
 dotenv.config();
 
-const filepath = "data/games.json";
-const fetchIntervalMilliSec = 5000;
+const fetchIntervalMilliSec = 2000;
 
 /**
  * Twitch APIラッパーを初期化
@@ -21,11 +21,6 @@ const initTwitchApi = async () => {
     return api;
 }
 
-const printLog = (message: string) => {
-    const today = new Date();
-    console.info(`[${today.getFullYear()}/${today.getMonth()}/${today.getDate()} ${today.getHours()}:${today.getMinutes()}:${today.getSeconds()}] ${message}`);
-}
-
 /**
  * 待機
  * @param milliSec 待機時間
@@ -33,21 +28,47 @@ const printLog = (message: string) => {
 const sleep = (milliSec: number) => new Promise(resolve => setTimeout(resolve, milliSec))
 
 /**
+ * 
+ * @param api Twitch API
+ * @param prevIgdbLastId 前回のIGDB ID
+ */
+const fetchIgdbLastId = async (api: TwitchApi, prevIgdbLastId: number) => {
+    const fetchGameLimit = 500;
+    let lastId = prevIgdbLastId;
+    for (let id = prevIgdbLastId; true; id+=fetchGameLimit) {
+        try {
+            printLog(`start fetch igdb games(id: ${id}...${id + fetchGameLimit})`);
+            const query = `fields id; sort id; limit ${fetchGameLimit}; offset: ${id};`
+            const games = await api.getIgdbGames(query);
+
+            const fetchedLatestGame = games === null || games.length === 0;
+            if(fetchedLatestGame) { break; }
+
+            lastId = games[games.length - 1].id!;
+            await sleep(fetchIntervalMilliSec);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    return lastId;
+}
+
+/**
  * ゲーム情報を取得
  * @param api Twitch API
  * @param prevGames 前回の取得結果
  */
-const fetchGames = async (api: TwitchApi, prevGames: TwtichGames) => {
-    const prevLastIgdbId = prevGames.length === 0 ? 0 : Number(prevGames[prevGames.length - 1].igdb_id);
+const fetchGames = async (api: TwitchApi, prevLastId: number, igdbLastId: number) => {
     let fetchedGames: TwtichGames = [];
-    let offset = prevLastIgdbId;
+    let offset = prevLastId;
     // データベースに登録されているゲームをすべて取得するため終了条件は未指定とする
-    for (let startId = prevLastIgdbId ; true ; startId += api.getGameCount()) {
+    console.log(prevLastId, prevLastId < igdbLastId, prevLastId + api.getGameCount())
+    for (let startId = prevLastId ; startId < igdbLastId; startId += api.getGameCount()) {
         try {
             printLog(`start fetch games(id: ${startId}...${startId + api.getGameCount()})`);
             const games = await api.getGames(startId, offset);
-            const fetchedLatestGame = games === null || games.length === 0;
-            if(fetchedLatestGame) { break; }
+            console.log(games);
 
             fetchedGames = [...fetchedGames, ...games];
             await sleep(fetchIntervalMilliSec);
@@ -59,42 +80,23 @@ const fetchGames = async (api: TwitchApi, prevGames: TwtichGames) => {
     return fetchedGames;
 }
 
-
-/**
- * 前回の結果を取得
- * @returns 
- */
-const load = () => {
-    const existsPrevData = fs.existsSync(filepath);
-    if (!existsPrevData){ return []; }
-        
-    const prevData = fs.readFileSync(filepath);
-    const prevGames: TwtichGames = JSON.parse(prevData.toString());
-    printLog(`loaded prev games(count: ${prevGames.length}, lastIgdbId: ${prevGames[prevGames.length - 1].igdb_id})`);
-    return prevGames;
-}
-
-/**
- * 結果をファイルに保存
- * @param prevGames 前回のゲーム情報
- * @param fetchedGames ソートしたゲーム情報
- */
-const save = (prevGames: TwtichGames, currentGames: TwtichGames) => {
-    const marged = [...prevGames, ...currentGames];
-    const uniqued = [...new Set(marged)];
-    const sorted = uniqued.sort((a, b) => Number(a.igdb_id) - Number(b.igdb_id));
-    fs.writeFileSync(filepath, JSON.stringify(sorted, null, "    "));
-    printLog(`saved games(count: ${sorted.length}, lastId: ${sorted[sorted.length - 1].igdb_id})`);
-}
-
 /**
  * ゲーム情報を更新
  */
 const updateGames = async () => {
     const api = await initTwitchApi();
-    const prevGames = load();
-    const currentGames = await fetchGames(api, prevGames);
-    save(prevGames, currentGames);
+    const prevData = load();
+    if(prevData == null){ return; }
+
+    // const igdbLastId = await fetchIgdbLastId(api, prevData.igdb_latest_id)
+    // printLog(`lastId: ${igdbLastId}`);
+
+    // const igdbLastId = 278817;
+    // const startId = 156235;
+    const igdbLastId = 278817;
+
+    const currentGames = await fetchGames(api, prevData.igdb_latest_id, igdbLastId);
+    save(prevData.twitch_game_list, currentGames, igdbLastId);
 }
 
 await updateGames();

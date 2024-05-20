@@ -1,4 +1,5 @@
-import { TwitchTokenAPIResponse, TwtichGames } from "./types/Twtich";
+import { URLSearchParams } from "url";
+import { IgdbGames, TwitchTokenAPIResponse, TwtichGames } from "./types/Twtich";
 
 export class TwitchApiSetting {
 	private _ClientId: string;
@@ -93,6 +94,32 @@ export class TwitchApi {
 		console.log("refreshed token.");
 	}
 
+	/**
+	 * IGDBからゲーム情報を取得
+	 * 
+	 * https://api-docs.igdb.com/?java#game
+	 * 
+	 * @param query
+	 */
+	async getIgdbGames(query: string) {
+		await this.refreshToken();
+
+		const url = "https://api.igdb.com/v4/games";
+
+		const response = await fetch(url, {
+			method: "POST",
+			headers: {
+				Authorization: this._Token!.token,
+				"Client-Id": this._Setting.ClientId
+			},
+			body: query
+		});
+
+		const json = await response.json();
+		const data = json as IgdbGames;
+		return data;
+	}
+
     /**
      * Game情報を取得
      * @param startId 
@@ -103,7 +130,7 @@ export class TwitchApi {
         await this.refreshToken();
 
         const baseUrl = "https://api.twitch.tv/helix/games";
-        const idRange = this.range(offset + startId, offset + startId + this.getGameCount(), 1);
+        const idRange = this.range(startId, startId + this.getGameCount(), 1);
         const params = this.createParams("igdb_id", idRange.map(id => id.toString()));
         const url = `${baseUrl}?${params}`;
 

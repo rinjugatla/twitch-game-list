@@ -16,11 +16,32 @@ export type TwitchTokenAPIResponse = {
 	token_type: string;
 }
 
-/**
- * Twitch Games API
- */
-export type TwtichGamesAPIResponse = {
-    data: TwtichGames
+export type IgdbGames = IgdbGame[];
+
+export type IgdbGame = {
+    id?: number,
+    age_rationgs?: number[],
+    artworks?: number[],
+    category?: number,
+    created_at?: number,
+    external_games?: number[],
+    first_release_date?: number,
+    genres?: number[],
+    name?: string,
+    parent_game?: number,
+    platforms?: number[],
+    release_dates?: number[],
+    screenshots?: number[],
+    similar_games?: number[]
+    slug?: string,
+    summary?: string,
+    tags?: number[]
+    themes?: number[],
+    updated_at?: number[],
+    url?: string,
+    websites?: number[],
+    checksum?: string,
+    language_supports?: number[],
 }
 
 /**
