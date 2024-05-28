@@ -63,9 +63,10 @@ const fetchIgdbLastId = async (api: TwitchApi, prevData: GameInfo | null) => {
 const fetchTwitchGames = async (api: TwitchApi, prevData: GameInfo | null, igdbLastId: number) => {
     let fetchedGames: TwtichGames = [];
     const prevLastId = prevData === null ? 1 : prevData.igdb_latest_id;
+    printLog(`start fetch twtich games(id: ${prevLastId}...${igdbLastId})`);
     for (let startId = prevLastId ; startId < igdbLastId; startId += api.getGameCount()) {
         try {
-            printLog(`start fetch games(id: ${startId}...${startId + api.getGameCount()})`);
+            printLog(`fetch twitch games(id: ${startId}...${startId + api.getGameCount()})`);
             const games = await api.getGames(startId);
 
             fetchedGames = [...fetchedGames, ...games];
