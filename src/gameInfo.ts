@@ -2,9 +2,11 @@ import * as fs from 'fs';
 import { GameInfo } from './types/GameInfo';
 import { printLog } from './common';
 import { TwtichGames } from './types/Twtich';
+import archiver from 'archiver';
+
 const dataPath = `data/games.json`;
 const dataMinPath = `data/games.min.json`;
-
+const dataZipPath = `data/games.zip`;
 /**
  * 前回の結果を取得
  * @returns 
@@ -36,5 +38,19 @@ export const save = (prevGames: GameInfo | null, currentGames: TwtichGames, igdb
     } as GameInfo
     fs.writeFileSync(dataPath, JSON.stringify(data, null, "    "));
     fs.writeFileSync(dataMinPath, JSON.stringify(data));
+    createArchive(data);
     printLog(`saved games(count: ${sorted.length}, lastId: ${data.igdb_latest_id})`);
+}
+
+/**
+ * 結果をZipファイルに保存
+ * @param data Twitchゲーム情報
+ */
+const createArchive = (data: GameInfo) => {
+    const output = fs.createWriteStream(dataZipPath);
+    const archive = archiver('zip', { zlib: { level: 9 } });
+    archive.pipe(output);
+    
+    archive.append(JSON.stringify(data), {name: "games.json"});
+    archive.finalize();
 }
