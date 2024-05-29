@@ -30,11 +30,11 @@ export const save = (prevGames: GameInfo | null, currentGames: TwtichGames, igdb
     const marged = [...prev, ...currentGames];
     const uniqued = [...new Map(marged.map((game) => [game.igdb_id, game])).values()];
     const sorted = uniqued.sort((a, b) => Number(a.igdb_id) - Number(b.igdb_id));
-    const date = {
+    const data = {
         igdb_latest_id: igdbLastId,
         twitch_game_list: sorted
     } as GameInfo
-    fs.writeFileSync(dataPath, JSON.stringify(date, null, "    "));
-    fs.writeFileSync(dataCompactPath, JSON.stringify(date));
-    printLog(`saved games(count: ${sorted.length}, lastId: ${date.igdb_latest_id})`);
+    fs.writeFileSync(dataPath, JSON.stringify(data, null, "    "));
+    fs.writeFileSync(dataCompactPath, JSON.stringify(data));
+    printLog(`saved games(count: ${sorted.length}, lastId: ${data.igdb_latest_id})`);
 }
