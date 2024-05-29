@@ -33,7 +33,7 @@ export const save = (prevGames: GameInfo | null, currentGames: TwtichGames, igdb
     const date = {
         igdb_latest_id: igdbLastId,
         twitch_game_list: sorted
-    }
+    } as GameInfo
     fs.writeFileSync(dataPath, JSON.stringify(date, null, "    "));
     fs.writeFileSync(dataCompactPath, JSON.stringify(date));
     printLog(`saved games(count: ${sorted.length}, lastId: ${date.igdb_latest_id})`);
