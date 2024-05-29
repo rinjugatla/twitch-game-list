@@ -3,17 +3,17 @@ import { GameInfo } from './types/GameInfo';
 import { printLog } from './common';
 import { TwtichGames } from './types/Twtich';
 const dataPath = `data/games.json`;
-const dataCompactPath = `data/games_compact.json`;
+const dataMinPath = `data/games.min.json`;
 
 /**
  * 前回の結果を取得
  * @returns 
  */
 export const load = () => {
-    const existsPrevData = fs.existsSync(dataCompactPath);
+    const existsPrevData = fs.existsSync(dataMinPath);
     if (!existsPrevData){ return null; }
         
-    const prevData = fs.readFileSync(dataCompactPath);
+    const prevData = fs.readFileSync(dataMinPath);
     const prevInfo: GameInfo = JSON.parse(prevData.toString());
     const gameList = prevInfo.twitch_game_list;
     printLog(`loaded prev games(count: ${gameList.length}, lastIgdbId: ${gameList[gameList.length - 1].igdb_id})`);
@@ -35,6 +35,6 @@ export const save = (prevGames: GameInfo | null, currentGames: TwtichGames, igdb
         twitch_game_list: sorted
     } as GameInfo
     fs.writeFileSync(dataPath, JSON.stringify(data, null, "    "));
-    fs.writeFileSync(dataCompactPath, JSON.stringify(data));
+    fs.writeFileSync(dataMinPath, JSON.stringify(data));
     printLog(`saved games(count: ${sorted.length}, lastId: ${data.igdb_latest_id})`);
 }
