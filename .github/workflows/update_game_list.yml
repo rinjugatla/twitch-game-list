@@ -1,0 +1,57 @@
+name: Update game list
+
+on:
+  schedule:
+    - cron: 0 0 * * * # JST 9;00
+  push:
+    branches: main
+
+jobs:
+  update_game_list:
+    name: Update game list
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Git config set
+        run: |
+          git config --global core.autocrlf input
+          git config --global user.email "action@github.com"
+          git config --global user.name "actions-user"
+
+      - name: Clone repository
+        uses: actions/checkout@v4
+
+      - name: Git pull
+        run: git pull origin main
+      
+      # - name: Git config unset # need only local
+      #   run: |
+      #     git config --local --unset user.signingkey
+      #     git config --local --unset gpg.format
+      #     git config --local --unset gpg.ssh.program
+      #     git config --local --unset commit.gpgsign
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install step
+        run: npm install
+
+      - name: Build app
+        run: npm run build
+
+      - name: Fix import path
+        run: npm run ts-add-js-ext
+
+      - name: Fetch Games
+        run: node ./build/index.js
+
+      - name: Git
+        run: |
+          git add ./data/games.json
+          git add ./data/games.min.json
+          git add ./data/games.zip
+          git commit -m "Update game list"  || echo "No changes to commit"
+          git push origin main
