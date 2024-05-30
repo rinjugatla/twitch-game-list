@@ -6,7 +6,7 @@ import { load, save } from './gameInfo';
 import { GameInfo } from './types/GameInfo';
 dotenv.config();
 
-const fetchIntervalMilliSec = 2000;
+const fetchIntervalMilliSec = 250;
 
 /**
  * Twitch APIラッパーを初期化
