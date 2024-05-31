@@ -3,8 +3,6 @@ name: Update game list
 on:
   schedule:
     - cron: 0 0 * * * # JST 9;00
-  push:
-    branches: main
 
 env:
   PRIVATE_CLIENT_ID: ${{ secrets.PRIVATE_CLIENT_ID }}
