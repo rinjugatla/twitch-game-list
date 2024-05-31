@@ -28,6 +28,12 @@ export const load = () => {
  * @param currentGames 今回取得したゲーム情報
  */
 export const save = (prevGames: GameInfo | null, currentGames: TwtichGames, igdbLastId: number) => {
+    const existsNewGames = currentGames != null && currentGames.length > 0;
+    if(!existsNewGames) { 
+        printLog(`not changed.`);
+        return; 
+    }
+    
     const prev = prevGames === null ? [] : prevGames.twitch_game_list;
     const marged = [...prev, ...currentGames];
     const uniqued = [...new Map(marged.map((game) => [game.igdb_id, game])).values()];
